@@ -1,8 +1,8 @@
 services:
   yolo:
-    command: test
     container_name: yolov8n
     image: yolov8n_image
+    command: train
     env_file:
       - .env
     build:

@@ -7,7 +7,7 @@ output_file="/app/output/train/weights/best.pt"
 imgsz=416
 epochs=50
 batch=12
-device=0
+device=cuda
 project="/app/output"
 
 if [ "$MODE" = "train" ]; then
