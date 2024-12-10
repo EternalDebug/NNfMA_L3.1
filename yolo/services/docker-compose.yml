@@ -3,13 +3,13 @@ services:
     build:
       context: ./yolov8n
     container_name: YOLOTrain
+    image: yolov8n_image
     shm_size: '3.5gb'
-    command: bash -c "yolo detect train model=$DF data=$DATA imgsz=$IMGSZ batch=$BS device=$DEVICE project=$PROJECT epochs=$EPOCHS exist_ok=True"
+    command: bash -c "yolo detect train model=$DEFAULT_FILE data=$DATA imgsz=$IMGSZ batch=$BS device=$DEVICE project=$PROJECT epochs=$EPOCHS exist_ok=True"
     env_file:
       - .env
     volumes:
       - ${DATASET_PATH}:/app/dataset
-      - ${SCRIPTS_PATH}:/app/scripts
       - ${OUTPUT_PATH}:/app/output
     deploy:
       resources:
@@ -23,27 +23,35 @@ services:
     build:
       context: ./yolov8n
     container_name: YOLOVal
-    command: bash -c "yolo detect val model=$DF data=$DATA imgsz=$IMGSZ batch=$BS device=$DEVICE project=$PROJECT exist_ok=True"
+    image: yolov8n_image
+    command: bash -c "yolo detect val model=$OUT_FILE data=$DATA imgsz=$IMGSZ batch=$BS device=$DEVICE project=$PROJECT exist_ok=True"
     env_file:
       - .env
     volumes:
       - ${DATASET_PATH}:/app/dataset
-      - ${SCRIPTS_PATH}:/app/scripts
       - ${OUTPUT_PATH}:/app/output
     depends_on:
       yolo_train:
         condition: service_completed_successfully
+    deploy:
+        resources:
+          reservations:
+            devices:
+            - driver: nvidia
+              device_ids: [ '0' ]
+              capabilities: [ gpu ]
 
   yolo_export:
     build:
       context: ./yolov8n
     container_name: YOLOExport
-    command: bash -c "yolo export model=$OUT_FILE data=$DATA half=True format=tflite int8=True"
+    image: yolov8n_image
+    # command: bash -c "yolo export model=$OUT_FILE data=$DATA half=True format=tflite int8=True"
+    command: bash -c "yolo export model=$OUT_FILE format=tflite"
     env_file:
       - .env
     volumes:
       - ${DATASET_PATH}:/app/dataset
-      - ${SCRIPTS_PATH}:/app/scripts
       - ${OUTPUT_PATH}:/app/output
     depends_on:
       yolo_val:
